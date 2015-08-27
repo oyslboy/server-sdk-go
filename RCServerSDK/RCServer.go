@@ -457,3 +457,22 @@ func (rcServer *RCServer) ChatroomQuery(chatroomId string) ([]byte, error) {
 	byteData, err := req.Bytes()
 	return byteData, err
 }
+
+func (rcServer *RCServer) GeneralPostServ(Serv_path string, args map[string]interface{}) ([]byte, error) {
+	destinationUrl := rcServer.apiUrl + Serv_path + rcServer.format
+	req := httplib.Post(destinationUrl)
+	for k, v := range args {
+		if v_str, ok := v.(string); ok {
+			req.Param(k, v_str)
+		} else if v_strs, ok := v.([]string); ok {
+			for _, v_str := range v_strs {
+				req.Param(k, v_str)
+			}
+		} else {
+			return nil, errors.New("arg's type not string or []string")
+		}
+	}
+
+	fillHeader(req, rcServer)
+	return req.Bytes()
+}
