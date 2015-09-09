@@ -460,19 +460,32 @@ func (rcServer *RCServer) ChatroomQuery(chatroomId string) ([]byte, error) {
 
 func (rcServer *RCServer) GeneralPostServ(Serv_path string, args map[string]interface{}) ([]byte, error) {
 	destinationUrl := rcServer.apiUrl + Serv_path + rcServer.format
-	req := httplib.Post(destinationUrl)
+
+	u := url.Values{}
 	for k, v := range args {
 		if v_str, ok := v.(string); ok {
-			req.Param(k, v_str)
+			u.Add(k, v_str)
 		} else if v_strs, ok := v.([]string); ok {
 			for _, v_str := range v_strs {
-				req.Param(k, v_str)
+				u.Add(k, v_str)
 			}
 		} else {
 			return nil, errors.New("arg's type not string or []string")
 		}
 	}
 
-	fillHeader(req, rcServer)
-	return req.Bytes()
+	req, err := http.NewRequest("POST", destinationUrl, bytes.NewBufferString(u.Encode()))
+
+	nonce, timestamp, signature := getSignature(rcServer)
+	req.Header.Set("App-Key", rcServer.appKey)
+	req.Header.Set("Nonce", nonce)
+	req.Header.Set("Timestamp", timestamp)
+	req.Header.Set("Signature", signature)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{}
+	res, _ := client.Do(req)
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	return body, err
 }
