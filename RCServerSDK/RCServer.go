@@ -465,9 +465,11 @@ func (rcServer *RCServer) GeneralPostServ(Serv_path string, args map[string]inte
 	for k, v := range args {
 		if v_str, ok := v.(string); ok {
 			u.Add(k, v_str)
-		} else if v_strs, ok := v.([]string); ok {
-			for _, v_str := range v_strs {
-				u.Add(k, v_str)
+		} else if v_slice, ok := v.([]interface{}); ok {
+			for _, v_i := range v_slice {
+				if v_str, ok := v_i.(string); ok {
+					u.Add(k, v_str)
+				}
 			}
 		} else {
 			return nil, errors.New("arg's type not string or []string")
