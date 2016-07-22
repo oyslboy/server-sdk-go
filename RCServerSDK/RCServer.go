@@ -45,6 +45,7 @@ const (
 	RC_USER_BLACK_ADD    = "/user/blacklist/add"
 	RC_USER_BLACK_REMOVE = "/user/blacklist/remove"
 	RC_USER_BLACK_QUERY  = "/user/blacklist/query"
+	RC_USER_TAG_SET      = "/user/tag/set"
 
 	RC_MESSAGE_PRIVATE_PUBLISH  = "/message/private/publish"
 	RC_MESSAGE_SYSTEM_PUBLISH   = "/message/system/publish"
@@ -67,6 +68,8 @@ const (
 	RC_CHATROOM_CREATE  = "/chatroom/create"
 	RC_CHATROOM_DESTROY = "/chatroom/destroy"
 	RC_CHATROOM_QUERY   = "/chatroom/query"
+
+	RC_PUSH = "/push"
 )
 
 type RCServer struct {
@@ -210,6 +213,21 @@ func (rcServer *RCServer) UserBlackQuery(userId string) ([]byte, error) {
 	destinationUrl := rcServer.apiUrl + RC_USER_BLACK_QUERY + rcServer.format
 	req := httplib.Post(destinationUrl)
 	req.Param("userId", userId)
+	fillHeader(req, rcServer)
+	byteData, err := req.Bytes()
+	return byteData, err
+}
+
+// 为应用中的用户添加标签，如果某用户已经添加了标签，再次对用户添加标签时将覆盖之前设置的标签内容 方法
+func (rcServer *RCServer) UserTagSet(userId string, tags []string) ([]byte, error) {
+	destinationUrl := rcServer.apiUrl + RC_USER_TAG_SET + rcServer.format
+	req := httplib.Post(destinationUrl)
+	param_json := map[string]interface{}{
+		"userId": userId,
+		"tags":   tags,
+	}
+
+	req.JsonBody(param_json)
 	fillHeader(req, rcServer)
 	byteData, err := req.Bytes()
 	return byteData, err
@@ -456,6 +474,29 @@ func (rcServer *RCServer) ChatroomQuery(chatroomId string) ([]byte, error) {
 	destinationUrl := rcServer.apiUrl + RC_CHATROOM_QUERY + rcServer.format
 	req := httplib.Post(destinationUrl)
 	req.Param("chatroomId", chatroomId)
+	fillHeader(req, rcServer)
+	byteData, err := req.Bytes()
+	return byteData, err
+}
+
+//广播消息 方法
+func (rcServer *RCServer) Push(
+	fromUserId string, platforms []string, audience []string,
+	message map[string]string, notification map[string]interface{},
+) (
+	[]byte, error,
+) {
+	destinationUrl := rcServer.apiUrl + RC_PUSH + rcServer.format
+	req := httplib.Post(destinationUrl)
+	param_json := map[string]interface{}{
+		"platform":     platforms,
+		"fromuserid":   fromUserId,
+		"audience":     audience,
+		"message":      message,
+		"notification": notification,
+	}
+
+	req.JsonBody(param_json)
 	fillHeader(req, rcServer)
 	byteData, err := req.Bytes()
 	return byteData, err
