@@ -227,7 +227,7 @@ func (rcServer *RCServer) UserTagSet(userId string, tags []string) ([]byte, erro
 		"tags":   tags,
 	}
 
-	req.JsonBody(param_json)
+	req.JSONBody(param_json)
 	fillHeader(req, rcServer)
 	byteData, err := req.Bytes()
 	return byteData, err
@@ -496,7 +496,7 @@ func (rcServer *RCServer) Push(
 		"notification": notification,
 	}
 
-	req.JsonBody(param_json)
+	req.JSONBody(param_json)
 	fillHeader(req, rcServer)
 	byteData, err := req.Bytes()
 	return byteData, err
